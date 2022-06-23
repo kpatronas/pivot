@@ -51,12 +51,6 @@ if __name__ == '__main__':
                         default  = 0,
                         help     = "fill n/a values.")
 
-    parser.add_argument('-m','--margins',
-                        default  = False,
-                        action   = 'store_true',
-                        required = False,
-                        help     = "Print Margins.")
-
     parser.add_argument('-i','--index',
                         type     = str,
                         nargs    = "+",
@@ -66,7 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('-v','--values',
                         type     = str,
                         nargs    = "+",
-                        required = False,
+                        required = True,
                         default  = [],
                         help     = "column names used as values.")
 
@@ -77,6 +71,11 @@ if __name__ == '__main__':
                         default  = [],
                         help     = "column names used to breakdown the analysis.")
 
+    parser.add_argument('-m','--margins',
+                        default  = True,
+                        required = False,
+                        action   = 'store_false')
+
     parser.add_argument('-a','--aggfunc',
                         type     = str,
                         nargs    = "+",
@@ -86,7 +85,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.export_csv == None and args.export_xlsx == None:
+    if args.export_csv == None and args.export_xlsx == None and args.export_html == None:
         stderr_print("Export filename is required.")
         sys.exit(1)
 
@@ -97,14 +96,19 @@ if __name__ == '__main__':
         stderr_print(str(ex))
         sys.exit()
 
-    if len(args.columns)   == 0 and len(args.values) ==0:
-        pivot = df.pivot_table(index = args.index,fill_value = args.fillna, margins = args.margins, aggfunc = args.aggfunc)
-    elif len(args.columns) == 0 and len(args.values) > 0:
-        pivot = df.pivot_table(index = args.index, values = args.values, fill_value = args.fillna, margins = args.margins, aggfunc = args.aggfunc)
-    elif len(args.values)  == 0 and len(args.columns) > 0:
-        pivot = df.pivot_table(index = args.index,columns = args.columns , fill_value = args.fillna, margins = args.margins, aggfunc = args.aggfunc)
-    elif len(args.values) > 0 and len(args.columns) > 0:
-        pivot = df.pivot_table(index = args.index,columns = args.columns , values=args.values,fill_value = args.fillna, margins = args.margins, aggfunc = args.aggfunc)
+    if len(args.columns) == 0:
+        pivot = df.pivot_table(index      = args.index,
+                               fill_value = args.fillna,
+                               margins    = args.margins,
+                               values     = args.values,
+                               aggfunc    = args.aggfunc)
+    elif len(args.columns) > 0:
+        pivot = df.pivot_table(index      = args.index,
+                               columns    = args.columns,
+                               values     = args.values,
+                               fill_value = args.fillna,
+                               margins    = args.margins,
+                               aggfunc    = args.aggfunc)
 
     if args.export_xlsx != None:
         pivot.to_excel(args.export_xlsx, index = True)
